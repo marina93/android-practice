@@ -16,12 +16,16 @@
 
 package com.example.android.guesstheword.screens.game
 
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.getSystemService
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -53,38 +57,33 @@ class GameFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(GameViewModel::class.java)
         Log.i("GameFragment", "Called ViewModelProviders.of!")
 
-        viewModel.currentTime.observe(viewLifecycleOwner, Observer {
-            newTime -> binding.timerText.text = DateUtils.formatElapsedTime(newTime)
+        viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
+            hasFinished -> if (hasFinished) gameFinished()
+            viewModel.onGameFinishedComplete()
         })
 
-        binding.correctButton.setOnClickListener {
-            viewModel.score.observe(viewLifecycleOwner, Observer {
-                newScore -> binding.scoreText.text = newScore.toString()
-            })
-            viewModel.word.observe(viewLifecycleOwner, Observer {
-                newWord -> binding.wordText.text = newWord.toString()
-            })
-            viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
-                hasFinished -> if (hasFinished) gameFinished()
-                viewModel.onGameFinishedComplete()
-            })
-            viewModel.onCorrect()
-        }
-        binding.skipButton.setOnClickListener {
-            viewModel.score.observe(viewLifecycleOwner, Observer {
-                newScore -> binding.scoreText.text = newScore.toString()
-            })
-            viewModel.word.observe(viewLifecycleOwner, Observer {
-                newWord -> binding.wordText.text = newWord.toString()
-            })
-            viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
-                hasFinished -> if (hasFinished) gameFinished()
-                viewModel.onGameFinishedComplete()
-            })
-            viewModel.onSkip()
-        }
+        viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
+            hasFinished -> if (hasFinished) gameFinished()
+            viewModel.onGameFinishedComplete()
+        })
+
+        binding.gameViewModel = viewModel
+        binding.lifecycleOwner = this
         return binding.root
 
+    }
+
+    private fun buzz(pattern: LongArray) {
+        val buzzer = activity?.getSystemService<Vibrator>()
+
+        buzzer?.let {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                buzzer.vibrate(VibrationEffect.createWaveform(pattern, -1))
+            } else {
+                //deprecated in API 26
+                buzzer.vibrate(pattern, -1)
+            }
+        }
     }
 
     /**
