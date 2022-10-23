@@ -20,6 +20,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.format.DateUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +43,8 @@ class GameFragment : Fragment() {
 
     private lateinit var binding: GameFragmentBinding
 
+    private lateinit var viewModel: GameViewModel
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
@@ -52,46 +56,30 @@ class GameFragment : Fragment() {
                 false
         )
 
-        // Get the viewmodel
         viewModel = ViewModelProvider(this).get(GameViewModel::class.java)
+        Log.i("GameFragment", "Called ViewModelProviders.of!")
 
-        // Set the viewmodel for databinding - this allows the bound layout access to all of the
-        // data in the VieWModel
+        viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
+            hasFinished -> if (hasFinished) gameFinished()
+            viewModel.onGameFinishedComplete()
+        })
+
+        viewModel.eventGameFinished.observe(viewLifecycleOwner, Observer {
+            hasFinished -> if (hasFinished) gameFinished()
+            viewModel.onGameFinishedComplete()
+        })
+
         binding.gameViewModel = viewModel
-
-        // Specify the current activity as the lifecycle owner of the binding. This is used so that
-        // the binding can observe LiveData updates
-        binding.setLifecycleOwner(this)
-
-        // Sets up event listening to navigate the player when the game is finished
-        viewModel.eventGameFinish.observe(viewLifecycleOwner, Observer { isFinished ->
-            if (isFinished) {
-                val currentScore = viewModel.score.value ?: 0
-                val action = GameFragmentDirections.actionGameToScore(currentScore)
-                findNavController(this).navigate(action)
-                viewModel.onGameFinishComplete()
-            }
-        })
-
-        // Buzzes when triggered with different buzz events
-        viewModel.eventBuzz.observe(viewLifecycleOwner, Observer { buzzType ->
-            if (buzzType != GameViewModel.BuzzType.NO_BUZZ) {
-                buzz(buzzType.pattern)
-                viewModel.onBuzzComplete()
-            }
-        })
-
+        binding.lifecycleOwner = this
         return binding.root
 
     }
 
-    /**
-     * Given a pattern, this method makes sure the device buzzes
-     */
     private fun buzz(pattern: LongArray) {
         val buzzer = activity?.getSystemService<Vibrator>()
+
         buzzer?.let {
-            // Vibrate for 500 milliseconds
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 buzzer.vibrate(VibrationEffect.createWaveform(pattern, -1))
             } else {
@@ -99,5 +87,13 @@ class GameFragment : Fragment() {
                 buzzer.vibrate(pattern, -1)
             }
         }
+    }
+
+    /**
+     * Called when the game is finished
+     */
+    private fun gameFinished() {
+        val action = GameFragmentDirections.actionGameToScore(viewModel.score.value ?: 0)
+        findNavController(this).navigate(action)
     }
 }

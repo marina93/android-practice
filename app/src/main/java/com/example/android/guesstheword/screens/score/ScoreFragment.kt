@@ -24,6 +24,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.android.guesstheword.R
@@ -51,26 +52,18 @@ class ScoreFragment : Fragment() {
                 false
         )
 
-        val scoreFragmentArgs by navArgs<ScoreFragmentArgs>()
+        viewModelFactory = ScoreViewModelFactory(ScoreFragmentArgs.fromBundle(savedInstanceState!!).score)
+        viewModel = ViewModelProvider(this, viewModelFactory).get(ScoreViewModel::class.java)
 
-        viewModelFactory = ScoreViewModelFactory(scoreFragmentArgs.score)
-        viewModel = ViewModelProvider(this, viewModelFactory)
-                .get(ScoreViewModel::class.java)
-
-        binding.scoreViewModel = viewModel
-
-        // Specify the current activity as the lifecycle owner of the binding. This is used so that
-        // the binding can observe LiveData updates
-        binding.setLifecycleOwner(this)
-
-        // Navigates back to title when button is pressed
-        viewModel.eventPlayAgain.observe(this, Observer { playAgain ->
-            if (playAgain) {
+        viewModel.eventPlayAgain.observe(viewLifecycleOwner, Observer {
+            playAgain -> if (playAgain) {
                 findNavController().navigate(ScoreFragmentDirections.actionRestart())
                 viewModel.onPlayAgainComplete()
             }
         })
 
+        binding.scoreViewModel = viewModel
+        binding.lifecycleOwner = this
         return binding.root
     }
 }
