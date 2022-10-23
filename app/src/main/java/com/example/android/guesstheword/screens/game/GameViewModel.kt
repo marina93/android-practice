@@ -156,5 +156,3 @@ class GameViewModel: ViewModel() {
     }
 }
 
-// TODO (02) Create the GameViewModel class, extending ViewModel
-// TODO (03) Add init and override onCleared; Add log statements to both

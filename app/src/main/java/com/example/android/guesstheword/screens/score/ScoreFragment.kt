@@ -64,7 +64,6 @@ class ScoreFragment : Fragment() {
 
         binding.scoreViewModel = viewModel
         binding.lifecycleOwner = this
-
         return binding.root
     }
 }

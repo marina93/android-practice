@@ -39,6 +39,8 @@ import com.example.android.guesstheword.databinding.GameFragmentBinding
  */
 class GameFragment : Fragment() {
 
+    private lateinit var viewModel: GameViewModel
+
     private lateinit var binding: GameFragmentBinding
 
     private lateinit var viewModel: GameViewModel
@@ -77,6 +79,7 @@ class GameFragment : Fragment() {
         val buzzer = activity?.getSystemService<Vibrator>()
 
         buzzer?.let {
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 buzzer.vibrate(VibrationEffect.createWaveform(pattern, -1))
             } else {
